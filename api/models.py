@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -18,7 +18,8 @@ class User(Base):
     accounts = relationship("Account", back_populates="user", cascade="all, delete-orphan")
     gmail_connection = relationship("GmailConnection", back_populates="user", uselist=False,
                                     cascade="all, delete-orphan")
-
+    gmail_email = Column(String, nullable=True)
+    gmail_connected = Column(Boolean, default=False)
 
 class Transaction(Base):
     __tablename__ = "transactions"

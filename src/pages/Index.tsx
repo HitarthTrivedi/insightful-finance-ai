@@ -6,8 +6,23 @@ import SpendingChart from "@/components/dashboard/SpendingChart";
 import GoalCard from "@/components/dashboard/GoalCard";
 import TransactionList from "@/components/dashboard/TransactionList";
 import AIAdvisor from "@/components/dashboard/AIAdvisor";
+import { useQuery } from "@tanstack/react-query";
+const API_URL = import.meta.env.PROD
+  ? "https://your-project.vercel.app"
+  : "http://localhost:8000";
 
 const Index = () => {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/dashboard/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch');
+      return response.json();
+    }
+  });
   return (
     <div className="min-h-screen bg-background dark">
       <Navbar />
@@ -23,7 +38,7 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Balance"
-            value="$24,580"
+  value={`$${stats?.total_balance?.toFixed(2) || '0.00'}`}
             change="+12.5%"
             changeType="positive"
             icon={Wallet}
@@ -31,7 +46,7 @@ const Index = () => {
           />
           <StatCard
             title="Monthly Income"
-            value="$6,050"
+  value={`$${stats?.monthly_income?.toFixed(2) || '0.00'}`}
             change="+8.2%"
             changeType="positive"
             icon={TrendingUp}
@@ -39,7 +54,7 @@ const Index = () => {
           />
           <StatCard
             title="Monthly Expenses"
-            value="$2,880"
+  value={`$${stats?.monthly_expenses?.toFixed(2) || '0.00'}`}
             change="-5.4%"
             changeType="positive"
             icon={TrendingDown}
@@ -47,7 +62,7 @@ const Index = () => {
           />
           <StatCard
             title="Savings Rate"
-            value="52.4%"
+  value={`${stats?.savings_rate || 0}%`}
             change="+3.1%"
             changeType="positive"
             icon={PiggyBank}

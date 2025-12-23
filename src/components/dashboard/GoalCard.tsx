@@ -1,5 +1,11 @@
 import { Target, TrendingUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+
+const API_URL = import.meta.env.PROD
+  ? "https://your-project.vercel.app"
+  : "http://localhost:8000";
 
 interface Goal {
   id: string;
@@ -17,6 +23,20 @@ const mockGoals: Goal[] = [
 ];
 
 const GoalCard = () => {
+  const { toast } = useToast();
+
+  const { data: goals, isLoading } = useQuery({
+    queryKey: ['goals'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/goals`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch');
+      return response.json();
+    }
+  });
+  if (isLoading) return <div className="glass-card rounded-2xl p-6">Loading goals...</div>;
   return (
     <div className="glass-card rounded-2xl p-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
       <div className="flex items-center justify-between mb-6">
@@ -30,7 +50,7 @@ const GoalCard = () => {
       </div>
 
       <div className="space-y-5">
-        {mockGoals.map((goal, index) => {
+        {goals?.map((goal, index) => {
           const progress = (goal.current / goal.target) * 100;
           return (
             <div 

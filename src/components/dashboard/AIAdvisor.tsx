@@ -1,7 +1,10 @@
 import { Bot, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
+import { useToast } from "@/hooks/use-toast";
+const API_URL = import.meta.env.PROD
+  ? "https://your-project.vercel.app"
+  : "http://localhost:8000";
 const suggestions = [
   "Analyze my spending patterns",
   "How can I save more?",
@@ -9,9 +12,41 @@ const suggestions = [
   "Suggest budget adjustments",
 ];
 
+
 const AIAdvisor = () => {
   const [input, setInput] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
+  const handleSend = async () => {
+  if (!input.trim()) return;
+
+  setIsLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/api/ai/advice`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query: input })
+    });
+
+    const data = await response.json();
+    setAiResponse(data.advice);
+    setInput("");
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to get AI advice",
+      variant: "destructive"
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <div className="glass-card rounded-2xl p-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "500ms" }}>
       <div className="flex items-center gap-3 mb-6">
@@ -31,9 +66,7 @@ const AIAdvisor = () => {
           </div>
           <div>
             <p className="text-sm text-foreground leading-relaxed">
-              Based on your recent transactions, I noticed you spent <span className="font-semibold text-primary">23% more</span> on dining out this month. 
-              To reach your vacation goal faster, consider cooking at home 2-3 more days per week. 
-              This could save you approximately <span className="font-semibold text-primary">$180/month</span>.
+                {aiResponse || "Based on your recent transactions, I noticed you spent 23% more on dining out this month..."}
             </p>
           </div>
         </div>
@@ -58,8 +91,8 @@ const AIAdvisor = () => {
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 h-11 px-4 rounded-xl bg-secondary border-0 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
         />
-        <Button size="icon" className="h-11 w-11 rounded-xl gradient-primary">
-          <Send className="h-4 w-4" />
+        <Button size="icon" className="h-11 w-11 rounded-xl gradient-primary" onClick={handleSend} disabled={isLoading}>
+            <Send className="h-4 w-4" />
         </Button>
       </div>
     </div>

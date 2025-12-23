@@ -105,3 +105,9 @@ class GmailStatus(BaseModel):
     email: Optional[str] = None
     last_synced: Optional[datetime] = None
     transactions_found: Optional[int] = None
+class GmailCredentials(BaseModel):
+    email: str
+    app_password: str
+
+class AIQuery(BaseModel):
+    query: str

@@ -1,5 +1,8 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-
+import { useQuery } from "@tanstack/react-query";
+const API_URL = import.meta.env.PROD
+  ? "https://your-project.vercel.app"
+  : "http://localhost:8000";
 const spendingData = [
   { name: "Housing", value: 1500, color: "hsl(160, 84%, 39%)" },
   { name: "Food", value: 450, color: "hsl(38, 92%, 50%)" },
@@ -10,8 +13,21 @@ const spendingData = [
 ];
 
 const SpendingChart = () => {
-  const total = spendingData.reduce((acc, item) => acc + item.value, 0);
+  const { data: analyticsData, isLoading } = useQuery({
+    queryKey: ['spending-analytics'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/analytics/spending`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch');
+      return response.json();
+    }
+  });
 
+  const spendingData = analyticsData?.data || [];
+  const total = analyticsData?.total || 0;
+  if (isLoading) return <div className="glass-card rounded-2xl p-6">Loading chart...</div>;
   return (
     <div className="glass-card rounded-2xl p-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
       <h2 className="text-lg font-semibold text-foreground mb-6">Monthly Spending</h2>

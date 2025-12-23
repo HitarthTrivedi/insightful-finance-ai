@@ -1,6 +1,7 @@
 import { ArrowDownLeft, ArrowUpRight, Building2, ShoppingCart, Utensils, Car, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 interface Transaction {
   id: string;
   title: string;
@@ -10,7 +11,9 @@ interface Transaction {
   type: "income" | "expense";
   bank: string;
 }
-
+const API_URL = import.meta.env.PROD
+  ? "https://your-project.vercel.app"
+  : "http://localhost:8000";
 const mockTransactions: Transaction[] = [
   { id: "1", title: "Salary Deposit", category: "Income", amount: 5200, date: "Dec 23, 2025", type: "income", bank: "Chase Bank" },
   { id: "2", title: "Amazon Purchase", category: "Shopping", amount: -89.99, date: "Dec 22, 2025", type: "expense", bank: "Chase Bank" },
@@ -32,6 +35,20 @@ const getCategoryIcon = (category: string) => {
 };
 
 const TransactionList = () => {
+  const { toast } = useToast();
+
+  const { data: transactions, isLoading } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/transactions`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch');
+      return response.json();
+    }
+  });
+
   return (
     <div className="glass-card rounded-2xl p-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "400ms" }}>
       <div className="flex items-center justify-between mb-6">
